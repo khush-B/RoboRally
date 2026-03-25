@@ -39,21 +39,28 @@ public class GameController {
     }
 
     /**
-     * This is just some dummy controller operation to make a simple move to see something
-     * happening on the board. This method should eventually be deleted!
+     * Moves the current player to the given space, provided the space is empty
+     * (i.e. no other player is already on it). After a successful move, the turn
+     * passes to the next player in the list and the board's move counter is
+     * incremented by one.
      *
      * @param space the space to which the current player should move
      */
     public void moveCurrentPlayerToSpace(@NotNull Space space)  {
-        // TODO A6a: this method should be implemented for Assignment 6a:
-        //   - the current player should be moved to the given space
-        //     (if it is free())
-        //   - and the current player should be set to the player
-        //     following the current player
-        //   - the counter of moves in the game should be increased by one
-        //     if and when the player is moved (the counter and the status line
-        //     message needs to be implemented at another place)
+        // Only move if the target space has no player on it
+        if (space.getPlayer() == null) {
+            Player currentPlayer = board.getCurrentPlayer();
 
+            // Move the current player to the clicked space
+            currentPlayer.setSpace(space);
+
+            // Determine the index of the next player (wrap around using modulo)
+            int nextPlayerIndex = (board.getPlayerNumber(currentPlayer) + 1) % board.getPlayersNumber();
+            board.setCurrentPlayer(board.getPlayer(nextPlayerIndex));
+
+            // Increment the move counter and notify observers via setCounter()
+            board.setCounter(board.getCounter() + 1);
+        }
     }
 
     // XXX A6c

@@ -59,9 +59,11 @@ public class Board extends Subject {
 
     private boolean stepMode;
 
-    // TODO A6a: add a moveCounter attribute to this class;
-    //     and add the corresponding getter and setter methods for
-    //     this move counter at an appropriate place in this class.
+    /**
+     * Counts the total number of moves (clicks) made during the game.
+     * Incremented each time a player is successfully moved to a new space.
+     */
+    private int moveCounter = 0;
 
     public Board(int width, int height, @NotNull String boardName) {
         this.boardName = boardName;
@@ -167,6 +169,29 @@ public class Board extends Subject {
         }
     }
 
+    /**
+     * Returns the current move counter value, i.e. the total number of
+     * successful player moves made so far in this game.
+     *
+     * @return the current move count
+     */
+    public int getCounter() {
+        return moveCounter;
+    }
+
+    /**
+     * Sets the move counter to the given value and notifies all observers
+     * so that the status line in the GUI is updated accordingly.
+     *
+     * @param counter the new move count value
+     */
+    public void setCounter(int counter) {
+        if (counter != this.moveCounter) {
+            this.moveCounter = counter;
+            notifyChange();
+        }
+    }
+
     public int getPlayerNumber(@NotNull Player player) {
         if (player.board == this) {
             return players.indexOf(player);
@@ -214,11 +239,10 @@ public class Board extends Subject {
         // the students, this method gives a string representation of the current
         // status of the game
 
-        // TODO A6a: add the move count to the status message of the board
         // TODO A6c: changed the status so that it shows the phase, the current player, and the current register
         //     and you can remove the move count status message message and the corresponding counter again
         // TODO A6e: add something to the status message, when a player has won the game
-        return "Player = " + getCurrentPlayer().getName();
+        return "Player = " + getCurrentPlayer().getName() + ", Moves = " + moveCounter;
     }
 
 }
