@@ -21,6 +21,7 @@
  */
 package dk.dtu.compute.se.pisd.roborally.controller;
 
+import dk.dtu.compute.se.pisd.roborally.model.Player;
 import dk.dtu.compute.se.pisd.roborally.model.Space;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,17 +56,26 @@ public class Checkpoint extends FieldAction {
     }
 
     /**
-     * Executes the checkpoint action when a player lands on this space.
-     * The actual game logic for collecting checkpoints will be implemented
-     * in a later assignment (A6d).
+     * Executes the checkpoint action: if the player on the given space
+     * has already collected all lower-numbered checkpoints (i.e. the
+     * player's checkpoint count equals {@code number - 1}), then the
+     * player's checkpoint count is incremented by one.
      *
      * @param gameController the game controller of the current game
      * @param space          the space that contains this checkpoint
-     * @return true if the action was successfully executed
+     * @return true if the checkpoint was successfully collected
      */
     @Override
     public boolean doAction(@NotNull GameController gameController, @NotNull Space space) {
-        // TODO A6d: implement checkpoint collection logic
+        Player player = space.getPlayer();
+        if (player != null) {
+            // The player can only collect this checkpoint if they have
+            // already collected all checkpoints with lower numbers
+            if (player.getCheckpoints() == number - 1) {
+                player.setCheckpoints(number);
+                return true;
+            }
+        }
         return false;
     }
 

@@ -48,6 +48,9 @@ public class Player extends Subject {
     private CommandCardField[] program;
     private CommandCardField[] cards;
 
+    /** The number of checkpoints this player has reached in order. */
+    private int checkpoints = 0;
+
     public Player(@NotNull Board board, String color, @NotNull String name) {
         this.board = board;
         this.name = name;
@@ -118,6 +121,31 @@ public class Player extends Subject {
     public void setHeading(@NotNull Heading heading) {
         if (heading != this.heading) {
             this.heading = heading;
+            notifyChange();
+            if (space != null) {
+                space.playerChanged();
+            }
+        }
+    }
+
+    /**
+     * Returns the number of checkpoints this player has collected in order.
+     *
+     * @return the number of collected checkpoints
+     */
+    public int getCheckpoints() {
+        return checkpoints;
+    }
+
+    /**
+     * Sets the number of checkpoints this player has collected and
+     * notifies observers so the view can update.
+     *
+     * @param checkpoints the new checkpoint count
+     */
+    public void setCheckpoints(int checkpoints) {
+        if (this.checkpoints != checkpoints) {
+            this.checkpoints = checkpoints;
             notifyChange();
             if (space != null) {
                 space.playerChanged();

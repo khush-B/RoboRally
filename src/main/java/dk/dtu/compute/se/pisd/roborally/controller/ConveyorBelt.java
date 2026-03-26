@@ -22,39 +22,59 @@
 package dk.dtu.compute.se.pisd.roborally.controller;
 
 import dk.dtu.compute.se.pisd.roborally.model.Heading;
+import dk.dtu.compute.se.pisd.roborally.model.Player;
 import dk.dtu.compute.se.pisd.roborally.model.Space;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * This class represents a conveyor belt on a space.
+ * This class represents a conveyor belt on a space. When activated,
+ * it moves any robot standing on it one space in the belt's heading
+ * direction (if not blocked by a wall).
  *
  * @author Ekkart Kindler, ekki@dtu.dk
- *
  */
-// XXX A6b this class might give you some inspiration for
-//         implementing the class CheckPoint
-// XXX A6d remember to also implement the doAction method for the
-//         class CheckPoint you added in Assignment 6b
 public class ConveyorBelt extends FieldAction {
 
+    /** The direction this conveyor belt pushes robots. */
     private Heading heading;
 
+    /**
+     * Returns the heading direction of this conveyor belt.
+     *
+     * @return the heading of this belt
+     */
     public Heading getHeading() {
         return heading;
     }
 
+    /**
+     * Sets the heading direction of this conveyor belt.
+     *
+     * @param heading the heading to set
+     */
     public void setHeading(Heading heading) {
         this.heading = heading;
     }
 
     /**
-     * Implementation of the action of a conveyor belt. Needs to be implemented for A3.
+     * Executes the conveyor belt action: moves the player on the given
+     * space one space in the belt's heading direction, provided no wall
+     * blocks the movement and the target space is free.
+     *
+     * @param gameController the game controller of the current game
+     * @param space          the space containing this conveyor belt
+     * @return true if the player was successfully moved
      */
     @Override
     public boolean doAction(@NotNull GameController gameController, @NotNull Space space) {
-        // TODO A6d: needs to be implemented
-        // ...
-
+        Player player = space.getPlayer();
+        if (player != null) {
+            Space target = gameController.board.getNeighbour(space, heading);
+            if (target != null && target.getPlayer() == null) {
+                player.setSpace(target);
+                return true;
+            }
+        }
         return false;
     }
 

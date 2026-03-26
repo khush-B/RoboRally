@@ -59,9 +59,11 @@ public class Board extends Subject {
 
     private boolean stepMode;
 
-    // TODO A6a: add a moveCounter attribute to this class;
-    //     and add the corresponding getter and setter methods for
-    //     this move counter at an appropriate place in this class.
+    /**
+     * Counts the total number of moves (clicks) made during the game.
+     * Incremented each time a player is successfully moved to a new space.
+     */
+    private int moveCounter = 0;
 
     public Board(int width, int height, @NotNull String boardName) {
         this.boardName = boardName;
@@ -167,6 +169,27 @@ public class Board extends Subject {
         }
     }
 
+    /**
+     * Returns the current move counter value.
+     *
+     * @return the current move count
+     */
+    public int getCounter() {
+        return moveCounter;
+    }
+
+    /**
+     * Sets the move counter and notifies observers.
+     *
+     * @param counter the new move count value
+     */
+    public void setCounter(int counter) {
+        if (counter != this.moveCounter) {
+            this.moveCounter = counter;
+            notifyChange();
+        }
+    }
+
     public int getPlayerNumber(@NotNull Player player) {
         if (player.board == this) {
             return players.indexOf(player);
@@ -179,16 +202,18 @@ public class Board extends Subject {
      * Returns the neighbour of the given space of the board in the given heading.
      * The neighbour is returned only, if it can be reached from the given space
      * (no walls or obstacles in either of the involved spaces); otherwise,
-     * null will be returned (this needs to be implemented for Assignment 6c).
+     * null will be returned.
      *
      * @param space the space for which the neighbour should be computed
      * @param heading the heading of the neighbour
      * @return the space in the given direction; null if there is no (reachable) neighbour
      */
     public Space getNeighbour(@NotNull Space space, @NotNull Heading heading) {
-        // TODO A6c: This implementation needs to be adjusted so that walls on
-        //          spaces (and maybe other obstacles) are taken into account
-        //          (see above JavaDoc comment for this method).
+        // Check for a wall on the current space blocking exit in the given heading
+        if (space.getWalls().contains(heading)) {
+            return null;
+        }
+
         int x = space.x;
         int y = space.y;
         switch (heading) {
@@ -206,19 +231,29 @@ public class Board extends Subject {
                 break;
         }
 
-        return getSpace(x, y);
+        Space neighbour = getSpace(x, y);
+
+        // Check for a wall on the target space blocking entry from the opposite direction
+        if (neighbour != null) {
+            Heading opposite = heading.next().next(); // opposite direction
+            if (neighbour.getWalls().contains(opposite)) {
+                return null;
+            }
+        }
+
+        return neighbour;
     }
 
+    /**
+     * Returns a status message string for display in the GUI status bar.
+     * Shows the current phase, current player, and step number.
+     *
+     * @return the status message string
+     */
     public String getStatusMessage() {
-        // this is actually a view aspect, but for making assignment V1 easy for
-        // the students, this method gives a string representation of the current
-        // status of the game
-
-        // TODO A6a: add the move count to the status message of the board
-        // TODO A6c: changed the status so that it shows the phase, the current player, and the current register
-        //     and you can remove the move count status message message and the corresponding counter again
-        // TODO A6e: add something to the status message, when a player has won the game
-        return "Player = " + getCurrentPlayer().getName();
+        return "Phase: " + getPhase().name() +
+               ", Player: " + getCurrentPlayer().getName() +
+               ", Step: " + getStep();
     }
 
 }

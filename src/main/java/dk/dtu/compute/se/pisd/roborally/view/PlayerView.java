@@ -60,6 +60,9 @@ public class PlayerView extends Tab implements ViewObserver {
     private Button executeButton;
     private Button stepButton;
 
+    /** Label showing the number of checkpoints collected by this player. */
+    private Label checkpointLabel;
+
     private VBox playerInteractionPanel;
 
     private GameController gameController;
@@ -92,17 +95,14 @@ public class PlayerView extends Tab implements ViewObserver {
         //       players, but on the PlayersView (view for all players). This should be
         //       refactored.
 
-        // TODO A6c: the following buttons should be associated with the proper methods
-        //          in the game controller
-
         finishButton = new Button("Finish Programming");
-        finishButton.setOnAction( e -> gameController.notImplemented());
+        finishButton.setOnAction( e -> gameController.finishProgrammingPhase());
 
         executeButton = new Button("Execute Program");
-        executeButton.setOnAction( e-> gameController.notImplemented());
+        executeButton.setOnAction( e-> gameController.executePrograms());
 
         stepButton = new Button("Execute Current Register");
-        stepButton.setOnAction( e-> gameController.notImplemented());
+        stepButton.setOnAction( e-> gameController.executeStep());
 
         buttonPanel = new VBox(finishButton, executeButton, stepButton);
         buttonPanel.setAlignment(Pos.CENTER_LEFT);
@@ -130,8 +130,9 @@ public class PlayerView extends Tab implements ViewObserver {
         top.getChildren().add(cardsLabel);
         top.getChildren().add(cardsPane);
 
-        // TODO A6d: a label for the status of this player could be added here
-        //     for showing the number of achieved checkpoints (etc).
+        // Checkpoint status label for this player
+        checkpointLabel = new Label("Checkpoints: 0");
+        top.getChildren().add(checkpointLabel);
 
         if (player.board != null) {
             player.board.attach(this);
@@ -142,8 +143,9 @@ public class PlayerView extends Tab implements ViewObserver {
     @Override
     public void updateView(Subject subject) {
         if (subject == player.board) {
-            // TODO A6d: update the status label for this player (showing the number
-            //     of achieved checkpoints)
+            // Update checkpoint status label
+            checkpointLabel.setText("Checkpoints: " + player.getCheckpoints());
+
             for (int i = 0; i < Player.NO_REGISTERS; i++) {
                 CardFieldView cardFieldView = programCardViews[i];
                 if (cardFieldView != null) {
