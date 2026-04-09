@@ -23,6 +23,8 @@ package dk.dtu.compute.se.pisd.roborally.view;
 
 import dk.dtu.compute.se.pisd.designpatterns.observer.Subject;
 import dk.dtu.compute.se.pisd.roborally.controller.GameController;
+import dk.dtu.compute.se.pisd.roborally.model.Command;
+import dk.dtu.compute.se.pisd.roborally.model.CommandCard;
 import dk.dtu.compute.se.pisd.roborally.model.CommandCardField;
 import dk.dtu.compute.se.pisd.roborally.model.Phase;
 import dk.dtu.compute.se.pisd.roborally.model.Player;
@@ -177,8 +179,6 @@ public class PlayerView extends Tab implements ViewObserver {
                 switch (player.board.getPhase()) {
                     case INITIALISATION:
                         finishButton.setDisable(true);
-                        // XXX just to make sure that there is a way for the player to get
-                        //     from the initialization phase to the programming phase somehow!
                         executeButton.setDisable(false);
                         stepButton.setDisable(true);
                         break;
@@ -195,6 +195,12 @@ public class PlayerView extends Tab implements ViewObserver {
                         stepButton.setDisable(false);
                         break;
 
+                    case FINISHED:
+                        finishButton.setDisable(true);
+                        executeButton.setDisable(true);
+                        stepButton.setDisable(true);
+                        break;
+
                     default:
                         finishButton.setDisable(true);
                         executeButton.setDisable(true);
@@ -208,19 +214,17 @@ public class PlayerView extends Tab implements ViewObserver {
                 playerInteractionPanel.getChildren().clear();
 
                 if (player.board.getCurrentPlayer() == player) {
-                    // TODO A6e: these buttons should be shown only when there is
-                    //      an interactive command card, and the buttons should represent
-                    //      the player's choices of the interactive command card. The
-                    //      following is just a mockup showing two options
-                    Button optionButton = new Button("Option1");
-                    optionButton.setOnAction( e -> gameController.notImplemented());
-                    optionButton.setDisable(false);
-                    playerInteractionPanel.getChildren().add(optionButton);
-
-                    optionButton = new Button("Option 2");
-                    optionButton.setOnAction( e -> gameController.notImplemented());
-                    optionButton.setDisable(false);
-                    playerInteractionPanel.getChildren().add(optionButton);
+                    // Show the interactive command options for the current card
+                    int step = player.board.getStep();
+                    CommandCard card = player.getProgramField(step).getCard();
+                    if (card != null && card.command.isInteractive()) {
+                        for (Command option : card.command.getOptions()) {
+                            Button optionButton = new Button(option.displayName);
+                            optionButton.setOnAction(e -> gameController.executeCommandOption(option));
+                            optionButton.setDisable(false);
+                            playerInteractionPanel.getChildren().add(optionButton);
+                        }
+                    }
                 }
             }
         }

@@ -158,7 +158,10 @@ public class BoardFactory {
         space = board.getSpace(7, 7);
         cp = new Checkpoint();
         cp.setNumber(3);
+        cp.setLastCheckpoint(true);
         space.getActions().add(cp);
+
+        board.setTotalCheckpoints(3);
 
         return board;
     }
@@ -251,7 +254,10 @@ public class BoardFactory {
         space = board.getSpace(1, 7);
         cp = new Checkpoint();
         cp.setNumber(3);
+        cp.setLastCheckpoint(true);
         space.getActions().add(cp);
+
+        board.setTotalCheckpoints(3);
 
         return board;
     }

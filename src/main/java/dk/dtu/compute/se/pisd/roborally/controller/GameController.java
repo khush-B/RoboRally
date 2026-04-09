@@ -226,6 +226,7 @@ public class GameController {
     /**
      * Continues executing register steps. In step mode, only one step
      * is executed; in continuous mode, all remaining steps are executed.
+     * Stops if the game enters PLAYER_INTERACTION or FINISHED phase.
      */
     private void continuePrograms() {
         do {
@@ -234,10 +235,10 @@ public class GameController {
     }
 
     /**
-     * Executes the next step of the activation phase: runs the command
-     * card in the current player's current register, advances to the
-     * next player, and after all players have executed a register,
-     * triggers field actions and moves to the next register.
+     * Executes the next step of the activation phase. If the current
+     * player's command card is interactive, the game switches to
+     * {@link Phase#PLAYER_INTERACTION} and waits for the player to
+     * choose an option. If the game is finished, execution stops.
      */
     private void executeNextStep() {
         Player currentPlayer = board.getCurrentPlayer();
@@ -247,29 +248,87 @@ public class GameController {
                 CommandCard card = currentPlayer.getProgramField(step).getCard();
                 if (card != null) {
                     Command command = card.command;
+                    if (command.isInteractive()) {
+                        // Interactive card — switch to PLAYER_INTERACTION and wait
+                        board.setPhase(Phase.PLAYER_INTERACTION);
+                        return;
+                    }
                     executeCommand(currentPlayer, command);
                 }
-                int nextPlayerNumber = board.getPlayerNumber(currentPlayer) + 1;
-                if (nextPlayerNumber < board.getPlayersNumber()) {
-                    board.setCurrentPlayer(board.getPlayer(nextPlayerNumber));
-                } else {
-                    // All players have executed this register — run field actions
-                    executeFieldActions();
 
-                    step++;
-                    if (step < Player.NO_REGISTERS) {
-                        makeProgramFieldsVisible(step);
-                        board.setStep(step);
-                        board.setCurrentPlayer(board.getPlayer(0));
-                    } else {
-                        startProgrammingPhase();
-                    }
+                // Check if the game was won during this step
+                if (board.getPhase() == Phase.FINISHED) {
+                    return;
                 }
+
+                advanceToNextPlayer(step);
             } else {
                 assert false;
             }
         } else {
             assert false;
+        }
+    }
+
+    /**
+     * Called when the player has chosen an option for an interactive
+     * command card during {@link Phase#PLAYER_INTERACTION}. Executes
+     * the chosen command, then resumes the normal activation flow.
+     *
+     * @param option the command option chosen by the player
+     */
+    public void executeCommandOption(@NotNull Command option) {
+        Player currentPlayer = board.getCurrentPlayer();
+        if (board.getPhase() == Phase.PLAYER_INTERACTION && currentPlayer != null) {
+            // Execute the chosen option
+            executeCommand(currentPlayer, option);
+
+            // Check if the game was won
+            if (board.getPhase() == Phase.FINISHED) {
+                return;
+            }
+
+            // Resume activation phase
+            board.setPhase(Phase.ACTIVATION);
+            int step = board.getStep();
+            advanceToNextPlayer(step);
+
+            // Continue if not in step mode
+            if (!board.isStepMode()) {
+                continuePrograms();
+            }
+        }
+    }
+
+    /**
+     * Advances the game to the next player in the current register,
+     * or to the next register if all players have executed. Triggers
+     * field actions between registers.
+     *
+     * @param step the current register step
+     */
+    private void advanceToNextPlayer(int step) {
+        Player currentPlayer = board.getCurrentPlayer();
+        int nextPlayerNumber = board.getPlayerNumber(currentPlayer) + 1;
+        if (nextPlayerNumber < board.getPlayersNumber()) {
+            board.setCurrentPlayer(board.getPlayer(nextPlayerNumber));
+        } else {
+            // All players have executed this register — run field actions
+            executeFieldActions();
+
+            // Check if a player won via field actions (e.g. checkpoint)
+            if (board.getPhase() == Phase.FINISHED) {
+                return;
+            }
+
+            step++;
+            if (step < Player.NO_REGISTERS) {
+                makeProgramFieldsVisible(step);
+                board.setStep(step);
+                board.setCurrentPlayer(board.getPlayer(0));
+            } else {
+                startProgrammingPhase();
+            }
         }
     }
 

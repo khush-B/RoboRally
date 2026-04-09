@@ -25,8 +25,11 @@ import dk.dtu.compute.se.pisd.designpatterns.observer.Subject;
 import dk.dtu.compute.se.pisd.roborally.controller.GameController;
 import dk.dtu.compute.se.pisd.roborally.model.Board;
 import dk.dtu.compute.se.pisd.roborally.model.Phase;
+import dk.dtu.compute.se.pisd.roborally.model.Player;
 import dk.dtu.compute.se.pisd.roborally.model.Space;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -51,6 +54,9 @@ public class BoardView extends VBox implements ViewObserver {
     private Label statusLabel;
 
     private SpaceEventHandler spaceEventHandler;
+
+    /** Flag to ensure the win dialog is shown only once. */
+    private boolean winDialogShown = false;
 
     public BoardView(@NotNull GameController gameController) {
         board = gameController.board;
@@ -86,6 +92,23 @@ public class BoardView extends VBox implements ViewObserver {
         if (subject == board) {
             Phase phase = board.getPhase();
             statusLabel.setText(board.getStatusMessage());
+
+            // Show a pop-up when a player wins
+            if (phase == Phase.FINISHED && !winDialogShown) {
+                winDialogShown = true;
+                Player winner = board.getWinner();
+                if (winner != null) {
+                    Platform.runLater(() -> {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Game Over");
+                        alert.setHeaderText(winner.getName() + " has won!");
+                        alert.setContentText(
+                                winner.getName() + " collected all " +
+                                winner.getCheckpoints() + " checkpoints and won the game!");
+                        alert.showAndWait();
+                    });
+                }
+            }
         }
     }
 

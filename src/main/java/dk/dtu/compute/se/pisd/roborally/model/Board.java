@@ -65,6 +65,12 @@ public class Board extends Subject {
      */
     private int moveCounter = 0;
 
+    /** The player who has won the game, or null if no winner yet. */
+    private Player winner = null;
+
+    /** The total number of checkpoints on this board (set during board setup). */
+    private int totalCheckpoints = 0;
+
     public Board(int width, int height, @NotNull String boardName) {
         this.boardName = boardName;
         this.width = width;
@@ -190,6 +196,43 @@ public class Board extends Subject {
         }
     }
 
+    /**
+     * Returns the player who has won the game.
+     *
+     * @return the winning player, or null if no winner yet
+     */
+    public Player getWinner() {
+        return winner;
+    }
+
+    /**
+     * Sets the winner of the game and notifies observers.
+     *
+     * @param winner the player who won
+     */
+    public void setWinner(Player winner) {
+        this.winner = winner;
+        notifyChange();
+    }
+
+    /**
+     * Returns the total number of checkpoints on this board.
+     *
+     * @return the total checkpoint count
+     */
+    public int getTotalCheckpoints() {
+        return totalCheckpoints;
+    }
+
+    /**
+     * Sets the total number of checkpoints on this board.
+     *
+     * @param totalCheckpoints the total number of checkpoints
+     */
+    public void setTotalCheckpoints(int totalCheckpoints) {
+        this.totalCheckpoints = totalCheckpoints;
+    }
+
     public int getPlayerNumber(@NotNull Player player) {
         if (player.board == this) {
             return players.indexOf(player);
@@ -251,6 +294,9 @@ public class Board extends Subject {
      * @return the status message string
      */
     public String getStatusMessage() {
+        if (getPhase() == Phase.FINISHED && winner != null) {
+            return winner.getName() + " has won the game!";
+        }
         return "Phase: " + getPhase().name() +
                ", Player: " + getCurrentPlayer().getName() +
                ", Step: " + getStep();

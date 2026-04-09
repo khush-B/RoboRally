@@ -1,8 +1,6 @@
 package dk.dtu.compute.se.pisd.roborally.controller;
 
-import dk.dtu.compute.se.pisd.roborally.model.Board;
-import dk.dtu.compute.se.pisd.roborally.model.Heading;
-import dk.dtu.compute.se.pisd.roborally.model.Player;
+import dk.dtu.compute.se.pisd.roborally.model.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -434,5 +432,107 @@ class GameControllerTest {
                 "Current player should NOT have moved — push blocked by wall!");
         Assertions.assertEquals(other, board.getSpace(4, 5).getPlayer(),
                 "Other player should NOT have moved!");
+    }
+
+    // ---------------------------------------------------------------
+    //  Assignment 6e: win condition
+    // ---------------------------------------------------------------
+
+    /** Collecting the last checkpoint should set the winner and FINISHED phase. */
+    @Test
+    void lastCheckpointTriggersWin() {
+        Board board = gameController.board;
+        Player player = board.getPlayer(0);
+        player.setCheckpoints(2); // already collected 1 and 2
+
+        Checkpoint lastCp = new Checkpoint();
+        lastCp.setNumber(3);
+        lastCp.setLastCheckpoint(true);
+        board.getSpace(5, 5).getActions().add(lastCp);
+
+        player.setSpace(board.getSpace(5, 5));
+        lastCp.doAction(gameController, board.getSpace(5, 5));
+
+        Assertions.assertEquals(3, player.getCheckpoints());
+        Assertions.assertEquals(Phase.FINISHED, board.getPhase(),
+                "Phase should be FINISHED after last checkpoint!");
+        Assertions.assertEquals(player, board.getWinner(),
+                "Winner should be the player who collected the last checkpoint!");
+    }
+
+    /** Non-last checkpoint should NOT trigger win. */
+    @Test
+    void nonLastCheckpointDoesNotTriggerWin() {
+        Board board = gameController.board;
+        Player player = board.getPlayer(0);
+
+        Checkpoint cp1 = new Checkpoint();
+        cp1.setNumber(1);
+        cp1.setLastCheckpoint(false);
+        board.getSpace(5, 5).getActions().add(cp1);
+
+        player.setSpace(board.getSpace(5, 5));
+        cp1.doAction(gameController, board.getSpace(5, 5));
+
+        Assertions.assertEquals(1, player.getCheckpoints());
+        Assertions.assertNotEquals(Phase.FINISHED, board.getPhase(),
+                "Phase should NOT be FINISHED after non-last checkpoint!");
+        Assertions.assertNull(board.getWinner(),
+                "Winner should be null after non-last checkpoint!");
+    }
+
+    // ---------------------------------------------------------------
+    //  Assignment 6e: interactive command card
+    // ---------------------------------------------------------------
+
+    /** LEFT_OR_RIGHT command should be interactive. */
+    @Test
+    void leftOrRightIsInteractive() {
+        Assertions.assertTrue(Command.LEFT_OR_RIGHT.isInteractive(),
+                "LEFT_OR_RIGHT should be an interactive command!");
+        Assertions.assertEquals(2, Command.LEFT_OR_RIGHT.getOptions().size(),
+                "LEFT_OR_RIGHT should have 2 options!");
+    }
+
+    /** executeCommandOption with LEFT should turn the player left. */
+    @Test
+    void executeCommandOptionLeft() {
+        Board board = gameController.board;
+        Player current = board.getCurrentPlayer();
+        current.setHeading(Heading.SOUTH);
+
+        // Set up: put an interactive card in register 0 and start activation
+        current.getProgramField(0).setCard(new CommandCard(Command.LEFT_OR_RIGHT));
+        gameController.finishProgrammingPhase();
+        // Execute one step — should detect interactive card and switch to PLAYER_INTERACTION
+        gameController.executeStep();
+
+        Assertions.assertEquals(Phase.PLAYER_INTERACTION, board.getPhase(),
+                "Phase should be PLAYER_INTERACTION for interactive card!");
+
+        // Player chooses LEFT
+        gameController.executeCommandOption(Command.LEFT);
+
+        Assertions.assertEquals(Heading.EAST, current.getHeading(),
+                "Player should face EAST after choosing LEFT from SOUTH!");
+    }
+
+    /** executeCommandOption with RIGHT should turn the player right. */
+    @Test
+    void executeCommandOptionRight() {
+        Board board = gameController.board;
+        Player current = board.getCurrentPlayer();
+        current.setHeading(Heading.SOUTH);
+
+        current.getProgramField(0).setCard(new CommandCard(Command.LEFT_OR_RIGHT));
+        gameController.finishProgrammingPhase();
+        gameController.executeStep();
+
+        Assertions.assertEquals(Phase.PLAYER_INTERACTION, board.getPhase());
+
+        gameController.executeCommandOption(Command.RIGHT);
+
+        Assertions.assertEquals(Heading.WEST, current.getHeading(),
+                "Player should face WEST after choosing RIGHT from SOUTH!");
     }
 }
