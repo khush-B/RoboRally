@@ -345,6 +345,32 @@ class GameControllerTest {
                 "P1 should NOT have moved!");
     }
 
+    /** Push chain of 3 robots blocked by wall — nobody moves (tests recursive pushRobot). */
+    @Test
+    void pushChainOfThreeBlockedByWall() {
+        Board board = gameController.board;
+        Player p0 = board.getPlayer(0);
+        Player p1 = board.getPlayer(1);
+        Player p2 = board.getPlayer(2);
+
+        p0.setSpace(board.getSpace(3, 3));
+        p0.setHeading(Heading.SOUTH);
+        p1.setSpace(board.getSpace(3, 4));
+        p2.setSpace(board.getSpace(3, 5));
+        // Wall blocks P2 from being pushed further south
+        board.getSpace(3, 5).getWalls().add(Heading.SOUTH);
+
+        gameController.moveForward(p0);
+
+        // All 3 should stay in place — chain blocked at the deepest level
+        Assertions.assertEquals(p0, board.getSpace(3, 3).getPlayer(),
+                "P0 should NOT have moved — chain push blocked by wall!");
+        Assertions.assertEquals(p1, board.getSpace(3, 4).getPlayer(),
+                "P1 should NOT have moved!");
+        Assertions.assertEquals(p2, board.getSpace(3, 5).getPlayer(),
+                "P2 should NOT have moved!");
+    }
+
     // ---------------------------------------------------------------
     //  Assignment 6d: field actions - ConveyorBelt
     // ---------------------------------------------------------------
